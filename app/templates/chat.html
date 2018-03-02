@@ -55,7 +55,7 @@
                 curve.fromBigInteger(new BigInteger(otherX)),
                 curve.fromBigInteger(new BigInteger(otherY)));
               var S = P.multiply(myPrivate);
-              return S.getX().toBigInteger().toString();
+              return pad(S.getX().toBigInteger().toString(16), 32);
             }
             function getKeys(publicKeys) {
                 var arr = [];
@@ -77,7 +77,6 @@
 
             function parseHexString(str) {
                 var result = [];
-                str = pad(str, 32);
                 while (str.length >= 2) { 
                     result.push(parseInt(str.substring(0, 2), 16));
 
@@ -95,7 +94,7 @@
             }
 
             function aes128Encrypt(key, text) {
-                var key_128 = parseHexString(new BigInteger(key).toString(16));
+                var key_128 = parseHexString(key);
                 console.log(key_128);
                 var textBytes = aesjs.utils.utf8.toBytes(text);
                 // The counter is optional, and if omitted will begin at 1
@@ -123,7 +122,7 @@
             }
 
             function aes128Decrypt(key, ciphertext) {
-                var key_128 = parseHexString(new BigInteger(key).toString(16));
+                var key_128 = parseHexString(key);
                 var textBytes = aesjs.utils.utf8.toBytes(text);
 
                 // When ready to decrypt the hex string, convert it back to bytes
