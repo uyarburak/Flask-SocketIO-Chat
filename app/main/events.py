@@ -12,9 +12,8 @@ def joined(message):
 
     if room not in rooms:
         rooms[room] =  {}
-
-    person = {'publicX': message['pubX'], 'publicY': message['pubY']}
-    rooms[room][session.get('name')] = person
+    person = {'name': session.get('name'), 'publicX': message['pubX'], 'publicY': message['pubY']}
+    rooms[room][request.sid] = person
     join_room(room)
     emit('status', {'msg': session.get('name') + ' has entered the room.', 'keys' : rooms[room]}, room=room)
 
@@ -25,6 +24,8 @@ def text(message):
     The message is sent to all people in the room."""
     room = session.get('room')
     emit('message', {'msg': session.get('name') + ':' + message['msg']}, room=room, broadcast=True, include_self=False)
+    for id in ids:
+        emit('message', {'msg': session.get('name') + ':' + message['msg']}, room=id)
 
 
 @socketio.on('left', namespace='/chat')
