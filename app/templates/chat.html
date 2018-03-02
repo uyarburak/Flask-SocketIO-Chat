@@ -59,18 +59,17 @@
 
         </script>
         <script type="text/javascript" charset="utf-8">
-
-            // AES-128 will be used, so I choose secp128r1 curve.
-            set_ec_params("secp128r1");
-
-            // Pick a random private key.
-            var myPrivate = pick_rand();
-            console.log(myPrivate.toString());
-            //  Calculate public key by private key using secp128r1 curve
-            calculatePublic();
-
             var socket;
             $(document).ready(function(){
+                // AES-128 will be used, so I choose secp128r1 curve.
+                set_ec_params("secp128r1");
+
+                // Pick a random private key.
+                var myPrivate = pick_rand();
+                console.log(myPrivate.toString());
+                //  Calculate public key by private key using secp128r1 curve
+                calculatePublic();
+
                 socket = io.connect('http://' + document.domain + ':' + location.port + '/chat');
                 socket.on('connect', function() {
                     socket.emit('joined', {});
