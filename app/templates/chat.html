@@ -72,7 +72,7 @@
 
                 socket = io.connect('http://' + document.domain + ':' + location.port + '/chat');
                 socket.on('connect', function() {
-                    socket.emit('joined', {});
+                    socket.emit('joined', {pubX : publicX.toString(), pubY: publicY.toString()});
                 });
                 socket.on('status', function(data) {
                     $('#chat').val($('#chat').val() + '<' + data.msg + '>\n');
