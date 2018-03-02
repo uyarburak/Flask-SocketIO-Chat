@@ -180,6 +180,8 @@
                         encryptWithAllKeys(text);
                         $('#text').val('');
                         socket.emit('text', {msg: text});
+                        $('#chat').val($('#chat').val() + '<Me: ' + text + '>\n');
+                        $('#chat').scrollTop($('#chat')[0].scrollHeight);
                     }
                 });
             });
