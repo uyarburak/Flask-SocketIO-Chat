@@ -65,10 +65,11 @@
                 });
                 sessionKeys = arr;
             }
-            function printKeys() {
+            function printKeys(except) {
                 var str = "";
                 for(let i = 0; i < sessionKeys.length; i++){
-                    str += sessionKeys[i].name + " : " + sessionKeys[i].session_key + '\n';
+                    if (except != sessionKeys[i].sid)
+                        str += sessionKeys[i].name + " : " + sessionKeys[i].session_key + '\n';
                 }
                 console.log(sessionKeys);
                 console.log(str);
@@ -159,7 +160,7 @@
                     console.log(data.keys);
                     console.log(socket.id)
                     getKeys(data.keys)
-                    printKeys();
+                    printKeys(socket.id);
                 });
                 socket.on('message', function(data) {
                     var result = $.grep(sessionKeys, function(e){ return e.sid == data.sender; });
