@@ -1,6 +1,7 @@
 <html>
     <head>
         <title>Flask-SocketIO-Chat: {{ room }}</title>
+        <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/main.css') }}"/>
         <script type="text/javascript" src="//code.jquery.com/jquery-1.4.2.min.js"></script>
         <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.6/socket.io.min.js"></script>
         <script type="text/javascript" src="https://cdn.rawgit.com/ricmoo/aes-js/e27b99df/index.js"></script>
@@ -11,7 +12,7 @@
         <script type="text/javascript" src="{{ url_for('static', filename='js/ec.js') }}"></script>
         <script type="text/javascript" src="{{ url_for('static', filename='js/sec.js') }}"></script>
         <script type="text/javascript" charset="utf-8">
-                    var rng = new SecureRandom();
+            var rng = new SecureRandom();
             var q, a, b, gx, gy, n, publicX, publicY;
             function set_ec_params(name) {
               var c = getSECCurveByName(name);
@@ -62,7 +63,16 @@
                     obj = publicKeys[key];
                     arr.push({name: key, session_key: calculateSessionKey(obj['publicX'], obj['publicY'])});
                 });
-                return arr;
+                sessionKeys = arr;
+            }
+            function printKeys() {
+                var str = "";
+                for(let i = 0; i < sessionKeys.length; i++){
+                    str += sessionKeys[i].name + " : " + sessionKeys[i].session_key + '\n';
+                }
+                console.log(sessionKeys);
+                console.log(str);
+                $('#session_keys').val(str);
             }
 
         </script>
@@ -71,7 +81,7 @@
             set_ec_params("secp128r1");
             // Pick a random private key.
             var myPrivate = pick_rand();
-
+            var sessionKeys;
             console.log(myPrivate.toString());
             //  Calculate public key by private key using secp128r1 curve
             calculatePublic();
@@ -86,7 +96,8 @@
                     $('#chat').val($('#chat').val() + '<' + data.msg + '>\n');
                     $('#chat').scrollTop($('#chat')[0].scrollHeight);
                     console.log(data.keys);
-                    getKeys(data.keys);
+                    getKeys(data.keys)
+                    printKeys();
                 });
                 socket.on('message', function(data) {
                     $('#chat').val($('#chat').val() + data.msg + '\n');
@@ -112,9 +123,18 @@
         </script>
     </head>
     <body>
-        <h1>Flask-SocketIO-Chat: {{ room }}</h1>
-        <textarea id="chat" cols="80" rows="20"></textarea><br><br>
-        <input id="text" size="80" placeholder="Enter your message here"><br><br>
-        <a href="#" onclick="leave_room();">Leave this room</a>
+        <div class="row">
+            <h1>Flask-SocketIO-Chat: {{ room }}</h1>
+        </div>
+        <div class="row">
+          <div class="column">
+            <textarea id="chat" cols="80" rows="20"></textarea><br><br>
+            <input id="text" size="80" placeholder="Enter your message here"><br><br>
+            <a href="#" onclick="leave_room();">Leave this room</a>
+          </div>
+          <div class="column">
+              <textarea id="session_keys" cols="80" rows="20"></textarea>
+          </div>
+        </div>
     </body>
 </html>
