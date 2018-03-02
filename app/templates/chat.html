@@ -164,7 +164,9 @@
                 });
                 socket.on('message', function(data) {
                     var result = $.grep(sessionKeys, function(e){ return e.sid == data.sender; });
-                    $('#chat').val($('#chat').val() + result[0].name +" : " + aes128Decrypt(result[0].session_key, data.cipher) + '\n');
+                    $('#chat').val($('#chat').val() + result[0].name +" : "
+                        + aes128Decrypt(result[0].session_key, data.cipher) 
+                        + " (" + data.cipher + ')\n');
                     $('#chat').scrollTop($('#chat')[0].scrollHeight);
                 });
                 $('#text').keypress(function(e) {
