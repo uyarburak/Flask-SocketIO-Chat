@@ -18,14 +18,15 @@ def joined(message):
     emit('status', {'msg': session.get('name') + ' has entered the room.', 'keys' : rooms[room]}, room=room)
 
 
-@socketio.on('text', namespace='/chat')
-def text(message):
+@socketio.on('ciphers', namespace='/chat')
+def ciphers(message):
     """Sent by a client when the user entered a new message.
     The message is sent to all people in the room."""
     room = session.get('room')
-    emit('message', {'msg': session.get('name') + ':' + message['msg']}, room=room, broadcast=True, include_self=False)
-    for id in ids:
-        emit('message', {'msg': session.get('name') + ':' + message['msg']}, room=id)
+    # emit('message', {'msg': session.get('name') + ':' + message['msg']}, room=room, broadcast=True, include_self=False)
+    for pair in message['arr']:
+        print (pair)
+        emit('message', {'sender': request.sid, 'cipher': pair['message']}, room=pair['sid'])
 
 
 @socketio.on('left', namespace='/chat')
@@ -34,5 +35,6 @@ def left(message):
     A status message is broadcast to all people in the room."""
     room = session.get('room')
     leave_room(room)
-    emit('status', {'msg': session.get('name') + ' has left the room.'}, room=room)
+    del rooms[room][request.sid]
+    emit('status', {'msg': session.get('name') + ' has left the room.', 'keys' : rooms[room]}, room=room)
 
