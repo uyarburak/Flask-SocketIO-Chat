@@ -11,6 +11,64 @@
         <script type="text/javascript" src="{{ url_for('static', filename='js/ec.js') }}"></script>
         <script type="text/javascript" src="{{ url_for('static', filename='js/sec.js') }}"></script>
         <script type="text/javascript" charset="utf-8">
+                    var rng = new SecureRandom();
+            var q, a, b, gx, gy, n, publicX, publicY;
+            function set_ec_params(name) {
+              var c = getSECCurveByName(name);
+
+              q = c.getCurve().getQ().toString();
+              a = c.getCurve().getA().toBigInteger().toString();
+              b = c.getCurve().getB().toBigInteger().toString();
+              gx = c.getG().getX().toBigInteger().toString();
+              gy = c.getG().getY().toBigInteger().toString();
+              n = c.getN().toString();
+            }
+            function pick_rand() {
+              var n2 = new BigInteger(n);
+              var n1 = n2.subtract(BigInteger.ONE);
+              var r = new BigInteger(n2.bitLength(), rng);
+              return r.mod(n1).add(BigInteger.ONE);
+            }
+            function get_curve() {
+              return new ECCurveFp(new BigInteger(q),
+                new BigInteger(a),
+                new BigInteger(b));
+            }
+
+            function get_G(curve) {
+              return new ECPointFp(curve,
+                curve.fromBigInteger(new BigInteger(gx)),
+                curve.fromBigInteger(new BigInteger(gy)));
+            }
+            function calculatePublic() {
+              var curve = get_curve();
+              var G = get_G(curve);
+              var P = G.multiply(myPrivate);
+              publicX = P.getX();
+              publicY = P.getY();
+            }
+
+            function calculateSessionKey(otherX, otherY) {
+              var curve = get_curve();
+              var P = new ECPointFp(curve,
+                curve.fromBigInteger(new BigInteger(otherX)),
+                curve.fromBigInteger(new BigInteger(otherY)));
+              var S = P.multiply(myPrivate);
+              return S.getX().toBigInteger().toString();
+            }
+
+        </script>
+        <script type="text/javascript" charset="utf-8">
+
+            // AES-128 will be used, so I choose secp128r1 curve.
+            set_ec_params("secp128r1");
+
+            // Pick a random private key.
+            var myPrivate = pick_rand();
+            console.log(myPrivate.toString());
+            //  Calculate public key by private key using secp128r1 curve
+            calculatePublic();
+
             var socket;
             $(document).ready(function(){
                 socket = io.connect('http://' + document.domain + ':' + location.port + '/chat');
