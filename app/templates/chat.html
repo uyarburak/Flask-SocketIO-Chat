@@ -157,12 +157,13 @@
                     $('#chat').val($('#chat').val() + '<' + data.msg + '>\n');
                     $('#chat').scrollTop($('#chat')[0].scrollHeight);
                     console.log(data.keys);
+                    console.log(socket.id)
                     getKeys(data.keys)
                     printKeys();
                 });
                 socket.on('message', function(data) {
                     var result = $.grep(sessionKeys, function(e){ return e.sid == data.sender; });
-                    $('#chat').val($('#chat').val() + aes128Decrypt(result[0].session_key, data.cipher) + '\n');
+                    $('#chat').val($('#chat').val() + result[0].name +" : " + aes128Decrypt(result[0].session_key, data.cipher) + '\n');
                     $('#chat').scrollTop($('#chat')[0].scrollHeight);
                 });
                 $('#text').keypress(function(e) {
@@ -171,8 +172,6 @@
                         text = $('#text').val();
                         $('#text').val('');
                         socket.emit('ciphers', {arr: encryptWithAllKeys(text)});
-                        $('#chat').val($('#chat').val() + '<Me: ' + text + '>\n');
-                        $('#chat').scrollTop($('#chat')[0].scrollHeight);
                     }
                 });
             });
