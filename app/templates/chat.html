@@ -56,6 +56,14 @@
               var S = P.multiply(myPrivate);
               return S.getX().toBigInteger().toString();
             }
+            function getKeys(publicKeys) {
+                var arr = [];
+                Object.keys(publicKeys).forEach(function(key,index) {
+                    obj = publicKeys[key];
+                    arr.push({name: key, session_key: calculateSessionKey(obj['publicX'], obj['publicY'])});
+                });
+                return arr;
+            }
 
         </script>
         <script type="text/javascript" charset="utf-8">
@@ -78,6 +86,7 @@
                     $('#chat').val($('#chat').val() + '<' + data.msg + '>\n');
                     $('#chat').scrollTop($('#chat')[0].scrollHeight);
                     console.log(data.keys);
+                    getKeys(data.keys);
                 });
                 socket.on('message', function(data) {
                     $('#chat').val($('#chat').val() + data.msg + '\n');
