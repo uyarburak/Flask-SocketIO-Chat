@@ -44,8 +44,8 @@
               var curve = get_curve();
               var G = get_G(curve);
               var P = G.multiply(myPrivate);
-              publicX = P.getX();
-              publicY = P.getY();
+              publicX = P.getX().toBigInteger().toString();
+              publicY = P.getY().toBigInteger().toString();
             }
 
             function calculateSessionKey(otherX, otherY) {
@@ -59,24 +59,25 @@
 
         </script>
         <script type="text/javascript" charset="utf-8">
+            // AES-128 will be used, so I choose secp128r1 curve.
+            set_ec_params("secp128r1");
+            // Pick a random private key.
+            var myPrivate = pick_rand();
+
+            console.log(myPrivate.toString());
+            //  Calculate public key by private key using secp128r1 curve
+            calculatePublic();
             var socket;
             $(document).ready(function(){
-                // AES-128 will be used, so I choose secp128r1 curve.
-                set_ec_params("secp128r1");
-
-                // Pick a random private key.
-                var myPrivate = pick_rand();
-                console.log(myPrivate.toString());
-                //  Calculate public key by private key using secp128r1 curve
-                calculatePublic();
 
                 socket = io.connect('http://' + document.domain + ':' + location.port + '/chat');
                 socket.on('connect', function() {
-                    socket.emit('joined', {pubX : publicX.toString(), pubY: publicY.toString()});
+                    socket.emit('joined', {pubX : publicX, pubY: publicY});
                 });
                 socket.on('status', function(data) {
                     $('#chat').val($('#chat').val() + '<' + data.msg + '>\n');
                     $('#chat').scrollTop($('#chat')[0].scrollHeight);
+                    console.log(data.keys);
                 });
                 socket.on('message', function(data) {
                     $('#chat').val($('#chat').val() + data.msg + '\n');

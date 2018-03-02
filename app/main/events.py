@@ -1,15 +1,22 @@
-from flask import session
+from flask import session, request
 from flask_socketio import emit, join_room, leave_room
 from .. import socketio
 
-
+rooms = {}
 @socketio.on('joined', namespace='/chat')
 def joined(message):
     """Sent by clients when they enter a room.
-    A status message is broadcast to all people in the room."""
+    A status message and public keys are broadcast to all people in the room."""
+
     room = session.get('room')
+
+    if room not in rooms:
+        rooms[room] =  {}
+
+    person = {'publicX': message['pubX'], 'publicY': message['pubY']}
+    rooms[room][session.get('name')] = person
     join_room(room)
-    emit('status', {'msg': session.get('name') + ' has entered the room.'}, room=room)
+    emit('status', {'msg': session.get('name') + ' has entered the room.', 'keys' : rooms[room]}, room=room)
 
 
 @socketio.on('text', namespace='/chat')
