@@ -26,3 +26,8 @@ def chat():
     if name == '' or room == '':
         return redirect(url_for('.index'))
     return render_template('chat.html', name=name, room=room)
+
+@main.route('/dump')
+def dump():
+    """Server dumps"""
+    return render_template('dump.html')

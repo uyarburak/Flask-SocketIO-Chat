@@ -16,6 +16,7 @@ def joined(message):
     rooms[room][request.sid] = person
     join_room(room)
     emit('status', {'msg': session.get('name') + ' has entered the room.', 'keys' : rooms[room]}, room=room)
+    dump(message)
 
 
 @socketio.on('ciphers', namespace='/chat')
@@ -27,6 +28,7 @@ def ciphers(message):
     for pair in message['arr']:
         print (pair)
         emit('message', {'sender': request.sid, 'cipher': pair['message']}, room=pair['sid'])
+    dump(message)
 
 
 @socketio.on('left', namespace='/chat')
@@ -37,4 +39,7 @@ def left(message):
     leave_room(room)
     del rooms[room][request.sid]
     emit('status', {'msg': session.get('name') + ' has left the room.', 'keys' : rooms[room]}, room=room)
+    dump(message)
 
+def dump(message):
+    emit('message', {'message' : str(message), 'sender' : session.get('name'), 'room' : session.get('room')}, namespace='/dump', broadcast=True)
