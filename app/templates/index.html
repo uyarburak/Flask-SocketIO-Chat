@@ -11,9 +11,20 @@
         <script type="text/javascript" src="{{ url_for('static', filename='js/rng.js') }}"></script>
         <script type="text/javascript" src="{{ url_for('static', filename='js/sha256.min.js') }}"></script>
         <script type="text/javascript" src="{{ url_for('static', filename='js/kripto.js') }}"></script>
+        <script type="text/javascript">
+            function randomHexString() {
+              var text = "";
+              var possible = "ABCDEF0123456789";
+
+              for (var i = 0; i < 24; i++)
+                text += possible.charAt(Math.floor(Math.random() * possible.length));
+
+              return text;
+            }
+        </script>
         <script type="text/javascript" charset="utf-8">
             var socket;
-            var hashed_password, username;
+            var hashed_password, username, session_key;
             $(document).ready(function(){
 
                 socket = io.connect('http://' + document.domain + ':' + location.port + '/auth');
@@ -32,9 +43,12 @@
                 socket.on('protocol_level_1', function(data) {
                     console.log('challenge: ' + data.challenge);
                     decrypted = aes128Decrypt(hashed_password, data.challenge);
+                    session_key = sha256(randomHexString());
                     console.log('decrypted: ' + decrypted);
-                    // TODO: get data.challenge and append hashed_password on it
-                    // Then AES128 encr
+                    toSend = JSON.stringify({challenge: decrypted, session_key: session_key});
+                    console.log('challenge sent: ' + decrypted);
+                    console.log('session_key sent: ', session_key);
+                    socket.emit('proof_of_id', {name: username, ciphertext: RSAEncrpyt(toSend)});
                 });
             });
         </script>
