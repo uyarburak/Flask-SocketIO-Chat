@@ -28,9 +28,8 @@
             $(document).ready(function(){
 
                 socket = io.connect('http://' + document.domain + ':' + location.port + '/auth');
-                socket.on('message', function(data) {
-                    $('#chat').val($('#chat').val() + data.sender + " at " + data.room + ": " + data.message + "\n");
-                    $('#chat').scrollTop($('#chat')[0].scrollHeight);
+                socket.on('error_message', function(data) {
+                    alert(data.message);
                 });
                 // First client says "hello my name is {name}" to server
                 $('#submit').on('click', function() {

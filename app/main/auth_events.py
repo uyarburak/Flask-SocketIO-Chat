@@ -4,7 +4,7 @@ from flask import session, request
 from flask_socketio import emit
 from .. import socketio
 from .users import getUser
-from .kripto import decryptRSA, encryptAES, decryptAES
+from .kripto import decryptRSA, encryptAES, decryptAES, generateRandomString
 from hashlib import sha256
 import string
 import random
@@ -22,13 +22,11 @@ def hex_sha1(string):
     hashed = sha256(string_to_sign)
     return hashed.hexdigest()
 
-def generateRandomChallenge(length=15):
-    return ''.join(random.choice(string.ascii_lowercase + string.digits) for _ in range(length))
-
 @socketio.on('start_protocol', namespace='/auth')
 def start_protocol(message):
     user = getUser(message['name'])
-    random_challenge = generateRandomChallenge()
+    random_challenge = generateRandomString()
+    user['challenge'] = random_challenge
     print ("random challenge: ", random_challenge)
     ciphertext = encryptAES(user['password'], random_challenge)
     print ("ciphertext: ", ciphertext)
@@ -43,8 +41,17 @@ def proof_of_id(message):
     obj = json.loads(plaintext)
     print ("given challenge: ", obj['challenge'])
     print ("given session_key: ", obj['session_key'])
+    if user['challenge'] != obj['challenge']:
+        error_message('You sent the wrong challenge')
+    else:
+        # User sent the right challenge
+        # Server should give client a sso_token with session_key encrypted
+        error_message('You sent the right challenge')
     dump('User sent a RSA encrypted message: ' + ciphertext + '\nServer decrypts it... Payload is: {challenge: \'\n' + obj['challenge'] + "\', session_key: \'" + obj['session_key'] +"\'}", user['name'])
 
 
 def dump(message, sender):
     emit('message', {'message' : str(message) + "\n", 'sender' : sender, 'room' : ""}, namespace='/dump', broadcast=True)
+
+def error_message(message):
+    emit('error_message', {'message' : str(message)}, include_self=True, Broadcast=False)
