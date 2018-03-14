@@ -9,9 +9,11 @@
         <script type="text/javascript" src="{{ url_for('static', filename='js/rsa.js') }}"></script>
         <script type="text/javascript" src="{{ url_for('static', filename='js/prng4.js') }}"></script>
         <script type="text/javascript" src="{{ url_for('static', filename='js/rng.js') }}"></script>
+        <script type="text/javascript" src="{{ url_for('static', filename='js/sha256.min.js') }}"></script>
+        <script type="text/javascript" src="{{ url_for('static', filename='js/kripto.js') }}"></script>
         <script type="text/javascript" charset="utf-8">
             var socket;
-            var hashed_password;
+            var hashed_password, username;
             $(document).ready(function(){
 
                 socket = io.connect('http://' + document.domain + ':' + location.port + '/auth');
@@ -21,15 +23,16 @@
                 });
                 // First client says "hello my name is {name}" to server
                 $('#submit').on('click', function() {
-                    hashed_password = hex_sha1($('#password').val());
-                    socket.emit('start_protocol', {name: $('#name').val()});
+                    hashed_password = sha256($('#password').val());
+                    username = $('#name').val();
+                    console.log("hashed_password: " + hashed_password);
+                    socket.emit('start_protocol', {name: username});
                 });
-                // Then server responds "If you are {name} then encrypt this challenge I sent."
+                // Then server responds "If you are {name} then decrypt this challenge I sent."
                 socket.on('protocol_level_1', function(data) {
-                    console.log('challenge: ' + data.challenge)
-                    console.log('noo: ' + str2rstr_utf8(data.challenge))
-                    console.log('HMAC: ' + hex_hmac_sha1(hashed_password, data.challenge))
-                    console.log('SHA1: ' + hex_sha1(data.challenge + hashed_password))
+                    console.log('challenge: ' + data.challenge);
+                    decrypted = aes128Decrypt(hashed_password, data.challenge);
+                    console.log('decrypted: ' + decrypted);
                     // TODO: get data.challenge and append hashed_password on it
                     // Then AES128 encr
                 });

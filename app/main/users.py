@@ -12,8 +12,8 @@ def getUser(name):
 	return users[name]
 
 def initForDemo():
-	# "7c4a8d09ca3762af61e59520943dc26494f8941b" is the SHA1 of "123456" in base 16.
-	addUser("user1", "7c4a8d09ca3762af61e59520943dc26494f8941b")
-	addUser("user2", "7c4a8d09ca3762af61e59520943dc26494f8941b")
-	addUser("user3", "7c4a8d09ca3762af61e59520943dc26494f8941b")
-	addUser("user4", "7c4a8d09ca3762af61e59520943dc26494f8941b")
+	# "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92" is the SHA56 of "123456" in base 16.
+	addUser("user1", "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92")
+	addUser("user2", "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92")
+	addUser("user3", "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92")
+	addUser("user4", "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92")

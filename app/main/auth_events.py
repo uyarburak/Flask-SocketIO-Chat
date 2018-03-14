@@ -4,6 +4,7 @@ from flask import session, request
 from flask_socketio import emit
 from .. import socketio
 from .users import getUser
+from .kripto import decryptRSA, encryptAES, decryptAES
 from hashlib import sha1
 import string
 import random
@@ -21,12 +22,13 @@ def hex_sha1(string):
     return hashed.hexdigest()
 
 def generateRandomChallenge(length=120):
-	return ''.join(random.choice(string.ascii_lowercase + string.digits) for _ in range(length))
+    return ''.join(random.choice(string.ascii_lowercase + string.digits) for _ in range(length))
 
 @socketio.on('start_protocol', namespace='/auth')
 def start_protocol(message):
-	user = getUser(message['name'])
-	random_challenge = generateRandomChallenge()
-	print (hmac_sha1(user['password'], random_challenge + user['password']))
-	print (hex_sha1(random_challenge + user['password']))
-	emit('protocol_level_1', {'challenge': random_challenge}, include_self=True, Broadcast=False)
+    user = getUser(message['name'])
+    random_challenge = generateRandomChallenge()
+    print ("random challenge: ", random_challenge)
+    ciphertext = encryptAES(user['password'], random_challenge)
+    print ("ciphertext: ", ciphertext)
+    emit('protocol_level_1', {'challenge': ciphertext}, include_self=True, Broadcast=False)
