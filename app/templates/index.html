@@ -50,6 +50,16 @@
                     console.log('session_key sent: ', session_key);
                     socket.emit('proof_of_id', {name: username, ciphertext: RSAEncrpyt(toSend)});
                 });
+                // Then server responds "Welcome {name} it is your sso_token decrypt with session_key you just sent."
+                socket.on('protocol_level_2', function(data) {
+                    decrypted = aes128Decrypt(session_key, data.sso_token);
+                    console.log('encrypted sso_token: ' + data.sso_token);
+                    console.log('decrypted sso_token: ' + decrypted);
+
+                    // Saves the sso_token and session_key to cookie
+                    setCookie("sso_token", decrypted, 365);
+                    setCookie("session_key", session_key, 365);
+                });
             });
         </script>
     </head>

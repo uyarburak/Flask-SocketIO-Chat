@@ -7,6 +7,8 @@ from Crypto import Random
 # Imports to use AES
 import pyaes
 import binascii
+import random
+import string
 
 decryptorRSA = None;
 sentinel = None;

@@ -3,11 +3,9 @@
 from flask import session, request
 from flask_socketio import emit
 from .. import socketio
-from .users import getUser
+from .users import getUser, setUsersTokenAndSessionKey
 from .kripto import decryptRSA, encryptAES, decryptAES, generateRandomString
 from hashlib import sha256
-import string
-import random
 import hmac
 import json
 
@@ -41,13 +39,19 @@ def proof_of_id(message):
     obj = json.loads(plaintext)
     print ("given challenge: ", obj['challenge'])
     print ("given session_key: ", obj['session_key'])
+    dump('User sent a RSA encrypted message: ' + ciphertext + '\nServer decrypts it... Payload is: {challenge: \'\n' + obj['challenge'] + "\', session_key: \'" + obj['session_key'] +"\'}", user['name'])
+
     if user['challenge'] != obj['challenge']:
         error_message('You sent the wrong challenge')
     else:
         # User sent the right challenge
         # Server should give client a sso_token with session_key encrypted
+        sso_token = generateRandomString(20)
+        setUsersTokenAndSessionKey(message['name'], sso_token, obj['session_key'])
+        encryptedToken = encryptAES(obj['session_key'], sso_token)
+        emit('protocol_level_2', {'sso_token': encryptedToken}, include_self=True, Broadcast=False)
         error_message('You sent the right challenge')
-    dump('User sent a RSA encrypted message: ' + ciphertext + '\nServer decrypts it... Payload is: {challenge: \'\n' + obj['challenge'] + "\', session_key: \'" + obj['session_key'] +"\'}", user['name'])
+        dump('Server sents sso_token: ' + sso_token + '\nEncrypted version: ' + encryptedToken, user['name'])
 
 
 def dump(message, sender):

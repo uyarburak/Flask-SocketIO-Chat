@@ -12,6 +12,11 @@ def getUser(name):
 		raise NameError('User not found')
 	return users[name]
 
+def setUsersTokenAndSessionKey(name, sso_token, session_key):
+	users[name]['sso_token'] = sso_token
+	users[name]['session_key'] = session_key
+	return users[name]
+
 def getSessionKeyOfUserWithToken(name, sso_token):
 	if name not in users:
 		raise NameError('User not found')
