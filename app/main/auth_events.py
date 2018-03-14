@@ -33,12 +33,18 @@ def start_protocol(message):
     ciphertext = encryptAES(user['password'], random_challenge)
     print ("ciphertext: ", ciphertext)
     emit('protocol_level_1', {'challenge': ciphertext}, include_self=True, Broadcast=False)
+    dump('Server creates a random challenge: ' + random_challenge + '\nAES256 encrypts with the user\'s hashed_password: ' + user['password'] + "\nCiphertext: " + ciphertext, user['name'])
 
 @socketio.on('proof_of_id', namespace='/auth')
-def start_protocol(message):
+def proof_of_id(message):
     user = getUser(message['name'])
     ciphertext = message['ciphertext']
     plaintext = decryptRSA(ciphertext)
     obj = json.loads(plaintext)
     print ("given challenge: ", obj['challenge'])
     print ("given session_key: ", obj['session_key'])
+    dump('User sent a RSA encrypted message: ' + ciphertext + '\nServer decrypts it... Payload is: {challenge: \'\n' + obj['challenge'] + "\', session_key: \'" + obj['session_key'] +"\'}", user['name'])
+
+
+def dump(message, sender):
+    emit('message', {'message' : str(message) + "\n", 'sender' : sender, 'room' : ""}, namespace='/dump', broadcast=True)
