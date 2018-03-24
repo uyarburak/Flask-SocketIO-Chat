@@ -30,7 +30,8 @@ def joined(message):
         print(secret)
         msg = {'msg': username + ' has entered the room.', 'keys' : rooms[room]}
         emit('status', encryptAES(secret, json.dumps(msg)), room=sid)
-    dump(message)
+    dump(username, room, message)
+    dump(username, room, 'decrypted message: ' + str(plaintext))
 
 
 @socketio.on('ciphers', namespace='/chat')
@@ -49,7 +50,8 @@ def ciphers(message):
         msg = {'sender': request.sid, 'cipher': pair['message'], 'checksum': pair['checksum']}
         secret = secrets[room][pair['sid']]
         emit('message', encryptAES(secret, json.dumps(msg)), room=pair['sid'])
-    dump(message)
+    dump(username, room, message)
+    dump(username, room, 'decrypted message: ' + str(plaintext))
 
 
 @socketio.on('left', namespace='/chat')
@@ -60,7 +62,7 @@ def left(message):
     leave_room(room)
     del rooms[room][request.sid]
     emit('status', {'msg': session.get('name') + ' has left the room.', 'keys' : rooms[room]}, room=room)
-    dump(message)
+    dump(session.get('name'), room, message)
 
-def dump(message):
-    emit('message', {'message' : str(message), 'sender' : session.get('name'), 'room' : session.get('room')}, namespace='/dump', broadcast=True)
+def dump(sender, room, message):
+    emit('message', {'message' : str(message), 'sender' : sender, 'room' : room}, namespace='/dump', broadcast=True)
