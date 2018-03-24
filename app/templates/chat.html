@@ -11,6 +11,7 @@
         <script type="text/javascript" src="{{ url_for('static', filename='js/rng.js') }}"></script>
         <script type="text/javascript" src="{{ url_for('static', filename='js/ec.js') }}"></script>
         <script type="text/javascript" src="{{ url_for('static', filename='js/sec.js') }}"></script>
+        <script type="text/javascript" src="{{ url_for('static', filename='js/sha256.min.js') }}"></script>
         <script type="text/javascript" src="{{ url_for('static', filename='js/cookie_util.js') }}"></script>
         <script type="text/javascript" src="{{ url_for('static', filename='js/kripto.js') }}"></script>
         <script type="text/javascript" charset="utf-8">
@@ -89,7 +90,7 @@
                 var ciphers = []
                 for(let i = 0; i < sessionKeys.length; i++){
                     let ciphertext = aes256Encrypt(sessionKeys[i].session_key, message);
-                    ciphers.push({sid: sessionKeys[i].sid, message: ciphertext})
+                    ciphers.push({sid: sessionKeys[i].sid, message: ciphertext, checksum: sha256.hmac(sessionKeys[i].session_key, ciphertext)})
                 }
                 return ciphers;
             }
@@ -137,10 +138,14 @@
                 socket.on('message', function(data) {
                     var message = getMessage(data);
                     var result = $.grep(sessionKeys, function(e){ return e.sid == message.sender; });
-                    $('#chat').val($('#chat').val() + result[0].name +" : "
-                        + aes256Decrypt(result[0].session_key, message.cipher) 
-                        + " (" + message.cipher + ')\n');
-                    $('#chat').scrollTop($('#chat')[0].scrollHeight);
+                    if(sha256.hmac(result[0].session_key, message.cipher) == message.checksum){
+                        $('#chat').val($('#chat').val() + result[0].name +" : "
+                            + aes256Decrypt(result[0].session_key, message.cipher) 
+                            + " (ciphertext: " + message.cipher + ', sha256_checksum: ' + message.checksum +')\n');
+                        $('#chat').scrollTop($('#chat')[0].scrollHeight);
+                    }else{
+                        alert("Message with wrong checksum has arrived!");
+                    }
                 });
                 $('#text').keypress(function(e) {
                     var code = e.keyCode || e.which;

@@ -46,7 +46,7 @@ def ciphers(message):
     # emit('message', {'msg': session.get('name') + ':' + message['msg']}, room=room, broadcast=True, include_self=False)
     for pair in plaintext['payload']:
         print (pair)
-        msg = {'sender': request.sid, 'cipher': pair['message']}
+        msg = {'sender': request.sid, 'cipher': pair['message'], 'checksum': pair['checksum']}
         secret = secrets[room][pair['sid']]
         emit('message', encryptAES(secret, json.dumps(msg)), room=pair['sid'])
     dump(message)
