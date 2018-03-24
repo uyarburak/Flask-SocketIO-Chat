@@ -88,7 +88,7 @@
             function encryptWithAllKeys(message) {
                 var ciphers = []
                 for(let i = 0; i < sessionKeys.length; i++){
-                    let ciphertext = aes128Encrypt(sessionKeys[i].session_key, message);
+                    let ciphertext = aes256Encrypt(sessionKeys[i].session_key, message);
                     ciphers.push({sid: sessionKeys[i].sid, message: ciphertext})
                 }
                 return ciphers;
@@ -96,7 +96,11 @@
 
         </script>
         <script type="text/javascript" charset="utf-8">
-            // AES-128 will be used, so I choose secp128r1 curve.
+            let url = window.location.href;
+            var room = url.substring(url.lastIndexOf('/') + 1);
+            var username = getCookie('username')
+            var session_key = getCookie('session_key');
+            // AES-256 will be used, so I choose secp128r1 curve.
             set_ec_params("secp128r1");
             // Pick a random private key.
             var myPrivate = pick_rand();
@@ -105,25 +109,37 @@
             //  Calculate public key by private key using secp128r1 curve
             calculatePublic();
             var socket;
+            function getMessage(message){
+                return JSON.parse(aes256Decrypt(session_key, message));
+            }
+            function sendMessage(payload){
+                secret_message = aes256Encrypt(session_key, JSON.stringify({sso_token: getCookie('sso_token'), room: room, payload: payload}));
+                return {username: username, secret_message: secret_message};
+            }
             $(document).ready(function(){
 
                 socket = io.connect('http://' + document.domain + ':' + location.port + '/chat');
                 socket.on('connect', function() {
-                    socket.emit('joined', {pubX : publicX, pubY: publicY});
+                    payload = {pubX : publicX, pubY: publicY};
+                    console.log(sendMessage(payload))
+                    socket.emit('joined', sendMessage(payload));
                 });
                 socket.on('status', function(data) {
-                    $('#chat').val($('#chat').val() + '<' + data.msg + '>\n');
+                    console.log('status: ' + data)
+                    decrypted = getMessage(data);
+                    $('#chat').val($('#chat').val() + '<' + decrypted.msg + '>\n');
                     $('#chat').scrollTop($('#chat')[0].scrollHeight);
-                    console.log(data.keys);
+                    console.log(decrypted.keys);
                     console.log(socket.id)
-                    getKeys(data.keys)
+                    getKeys(decrypted.keys)
                     printKeys(socket.id);
                 });
                 socket.on('message', function(data) {
-                    var result = $.grep(sessionKeys, function(e){ return e.sid == data.sender; });
+                    var message = getMessage(data);
+                    var result = $.grep(sessionKeys, function(e){ return e.sid == message.sender; });
                     $('#chat').val($('#chat').val() + result[0].name +" : "
-                        + aes128Decrypt(result[0].session_key, data.cipher) 
-                        + " (" + data.cipher + ')\n');
+                        + aes256Decrypt(result[0].session_key, message.cipher) 
+                        + " (" + message.cipher + ')\n');
                     $('#chat').scrollTop($('#chat')[0].scrollHeight);
                 });
                 $('#text').keypress(function(e) {
@@ -131,7 +147,8 @@
                     if (code == 13) {
                         text = $('#text').val();
                         $('#text').val('');
-                        socket.emit('ciphers', {arr: encryptWithAllKeys(text)});
+                        payload = encryptWithAllKeys(text);
+                        socket.emit('ciphers', sendMessage(payload));
                     }
                 });
             });

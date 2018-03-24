@@ -1,33 +1,54 @@
 from flask import session, request
 from flask_socketio import emit, join_room, leave_room
 from .. import socketio
+from .kripto import encryptAES, decryptAES, generateRandomString
+from .users import getUser, setUsersTokenAndSessionKey
+import json
 
 rooms = {}
+secrets = {}
 @socketio.on('joined', namespace='/chat')
 def joined(message):
     """Sent by clients when they enter a room.
     A status message and public keys are broadcast to all people in the room."""
-
-    room = session.get('room')
-
+    username = message['username']
+    ciphertext = message['secret_message']
+    user = getUser(username)
+    plaintext = json.loads(decryptAES(user['session_key'], ciphertext))
+    if(user['sso_token'] != plaintext['sso_token']):
+        emit('quit', {}, include_self=True, Broadcast=False)
+    room = plaintext['room']
+    user_keys = plaintext['payload']
     if room not in rooms:
         rooms[room] =  {}
-    person = {'name': session.get('name'), 'publicX': message['pubX'], 'publicY': message['pubY']}
-    rooms[room][request.sid] = person
-    join_room(room)
-    emit('status', {'msg': session.get('name') + ' has entered the room.', 'keys' : rooms[room]}, room=room)
+        secrets[room] =  {}
+    rooms[room][request.sid] = {'name': username, 'publicX': user_keys['pubX'], 'publicY': user_keys['pubY']}
+    secrets[room][request.sid] = user['session_key']
+    for sid in rooms[room]:
+        prsn = rooms[room][sid]
+        secret = secrets[room][sid]
+        print(secret)
+        msg = {'msg': username + ' has entered the room.', 'keys' : rooms[room]}
+        emit('status', encryptAES(secret, json.dumps(msg)), room=sid)
     dump(message)
 
 
 @socketio.on('ciphers', namespace='/chat')
 def ciphers(message):
-    """Sent by a client when the user entered a new message.
-    The message is sent to all people in the room."""
-    room = session.get('room')
+    username = message['username']
+    ciphertext = message['secret_message']
+    user = getUser(username)
+    plaintext = json.loads(decryptAES(user['session_key'], ciphertext))
+    print('lol ' + json.dumps(plaintext))
+    if(user['sso_token'] != plaintext['sso_token']):
+        emit('quit', {}, include_self=True, Broadcast=False)
+    room = plaintext['room']
     # emit('message', {'msg': session.get('name') + ':' + message['msg']}, room=room, broadcast=True, include_self=False)
-    for pair in message['arr']:
+    for pair in plaintext['payload']:
         print (pair)
-        emit('message', {'sender': request.sid, 'cipher': pair['message']}, room=pair['sid'])
+        msg = {'sender': request.sid, 'cipher': pair['message']}
+        secret = secrets[room][pair['sid']]
+        emit('message', encryptAES(secret, json.dumps(msg)), room=pair['sid'])
     dump(message)
 
 

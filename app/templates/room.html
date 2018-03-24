@@ -1,0 +1,44 @@
+<html>
+    <head>
+        <title>Flask-SocketIO-Chat</title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+        <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.6/socket.io.min.js"></script>
+        <script type="text/javascript" src="https://cdn.rawgit.com/ricmoo/aes-js/e27b99df/index.js"></script>
+        <script type="text/javascript" src="{{ url_for('static', filename='js/sha1.js') }}"></script>
+        <script type="text/javascript" src="{{ url_for('static', filename='js/jsbn.js') }}"></script>
+        <script type="text/javascript" src="{{ url_for('static', filename='js/rsa.js') }}"></script>
+        <script type="text/javascript" src="{{ url_for('static', filename='js/prng4.js') }}"></script>
+        <script type="text/javascript" src="{{ url_for('static', filename='js/rng.js') }}"></script>
+        <script type="text/javascript" src="{{ url_for('static', filename='js/sha256.min.js') }}"></script>
+        <script type="text/javascript" src="{{ url_for('static', filename='js/cookie_util.js') }}"></script>
+        <script type="text/javascript" src="{{ url_for('static', filename='js/kripto.js') }}"></script>
+        <script type="text/javascript" charset="utf-8">
+
+            $(document).ready(function(){
+                let username = getCookie('username');
+                if(username == ''){
+                    // similar behavior as clicking on a link
+                    window.location.href = "/index";
+                }
+                $('#welcome').html('Welcome ' + username);
+                $('#submit').on('click', function() {
+                    let roomId = $('#room').val();
+                    if(roomId != ''){
+                        $('#room').val('');
+                        window.open('/chat/' + roomId, '_blank');
+                    }
+                });
+            });
+
+        </script>
+    </head>
+    <body>
+        <h3 id="welcome">Welcome {{ username }}</span>
+        <h1>Enter a chatroom</h1>
+        <form id="form">
+            {{ form.hidden_tag() }}
+            {{ form.room.label }}: {{ form.room() }} {% for error in form.room.errors %}{{ error }}{% endfor %}<br>
+            <button id="submit" type="button">Button</button>
+        </form>
+    </body>
+</html>

@@ -1,33 +1,30 @@
 from flask import session, redirect, url_for, render_template, request
 from . import main
-from .forms import LoginForm
+from .forms import LoginForm, RoomSelectForm
 
 
-@main.route('/', methods=['GET', 'POST'])
+@main.route('/')
 def index():
-    """Login form to enter a room."""
+    """Login form to authentication step."""
     form = LoginForm()
-    if form.validate_on_submit():
-        session['name'] = form.name.data
-        session['room'] = form.room.data
-        return redirect(url_for('.chat'))
-    elif request.method == 'GET':
-        form.name.data = session.get('name', '')
-        form.room.data = session.get('room', '')
     return render_template('index.html', form=form)
 
 
-@main.route('/chat')
-def chat():
+@main.route('/chat/<room>')
+def chat(room):
     """Chat room. The user's name and room must be stored in
     the session."""
-    name = session.get('name', '')
-    room = session.get('room', '')
-    if name == '' or room == '':
+    if room == '':
         return redirect(url_for('.index'))
-    return render_template('chat.html', name=name, room=room)
+    return render_template('chat.html', room=room)
 
 @main.route('/dump')
 def dump():
     """Server dumps"""
     return render_template('dump.html')
+
+@main.route('/room')
+def select_room():
+    """Room entering form"""
+    form = RoomSelectForm()
+    return render_template('room.html', form=form)

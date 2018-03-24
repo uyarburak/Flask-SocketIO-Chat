@@ -12,6 +12,7 @@
         <script type="text/javascript" src="{{ url_for('static', filename='js/sha256.min.js') }}"></script>
         <script type="text/javascript" src="{{ url_for('static', filename='js/cookie_util.js') }}"></script>
         <script type="text/javascript" src="{{ url_for('static', filename='js/kripto.js') }}"></script>
+        <script type="text/javascript" src="{{ url_for('static', filename='js/kripto_rsa.js') }}"></script>
         <script type="text/javascript">
             function randomHexString() {
               var text = "";
@@ -27,7 +28,10 @@
             var socket;
             var hashed_password, username, session_key;
             $(document).ready(function(){
-
+                if(getCookie('username') != ''){
+                    // similar behavior as clicking on a link
+                    window.location.href = "/room";
+                }
                 socket = io.connect('http://' + document.domain + ':' + location.port + '/auth');
                 socket.on('error_message', function(data) {
                     alert(data.message);
@@ -42,7 +46,7 @@
                 // Then server responds "If you are {name} then decrypt this challenge I sent."
                 socket.on('protocol_level_1', function(data) {
                     console.log('challenge: ' + data.challenge);
-                    decrypted = aes128Decrypt(hashed_password, data.challenge);
+                    decrypted = aes256Decrypt(hashed_password, data.challenge);
                     session_key = sha256(randomHexString());
                     console.log('decrypted: ' + decrypted);
                     toSend = JSON.stringify({challenge: decrypted, session_key: session_key});
@@ -52,24 +56,27 @@
                 });
                 // Then server responds "Welcome {name} it is your sso_token decrypt with session_key you just sent."
                 socket.on('protocol_level_2', function(data) {
-                    decrypted = aes128Decrypt(session_key, data.sso_token);
+                    decrypted = aes256Decrypt(session_key, data.sso_token);
                     console.log('encrypted sso_token: ' + data.sso_token);
                     console.log('decrypted sso_token: ' + decrypted);
 
                     // Saves the sso_token and session_key to cookie
+                    setCookie("username", username, 365);
                     setCookie("sso_token", decrypted, 365);
                     setCookie("session_key", session_key, 365);
+
+                    // similar behavior as clicking on a link
+                    window.location.href = "/room";
                 });
             });
         </script>
     </head>
     <body>
         <h1>Flask-SocketIO-Chat</h1>
-        <form id="form" method="POST">
+        <form id="form">
             {{ form.hidden_tag() }}
             {{ form.name.label }}: {{ form.name() }} {% for error in form.name.errors %}{{ error }}{% endfor %}<br>
             {{ form.password.label }}: {{ form.password() }} {% for error in form.password.errors %}{{ error }}{% endfor %}<br>
-            {{ form.room.label }}: {{ form.room() }} {% for error in form.room.errors %}{{ error }}{% endfor %}<br>
             <button id="submit" type="button">Button</button>
         </form>
     </body>
